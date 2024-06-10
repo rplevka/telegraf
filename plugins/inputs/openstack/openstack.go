@@ -786,6 +786,7 @@ func (o *OpenStack) gatherFlavors(ctx context.Context, acc telegraf.Accumulator)
 		}
 		fields := map[string]interface{}{
 			"id":          flavor.ID,
+			"name":        flavor.Name,
 			"disk":        flavor.Disk,
 			"ram":         flavor.RAM,
 			"rxtx_factor": flavor.RxTxFactor,
@@ -923,13 +924,15 @@ func (o *OpenStack) gatherServers(ctx context.Context, acc telegraf.Accumulator)
 
 		// Extract the flavor details to avoid joins (ignore errors and leave as zero values)
 		var vcpus, ram, disk int
+		var flavor_name string
 		if flavorIDInterface, found := server.Flavor["id"]; found {
 			if flavorID, ok := flavorIDInterface.(string); ok {
-				tags["flavor"] = flavorID
+				tags["flavor_id"] = flavorID
 				if flavor, ok := o.openstackFlavors[flavorID]; ok {
 					vcpus = flavor.VCPUs
 					ram = flavor.RAM
 					disk = flavor.Disk
+					flavor_name = flavor.Name
 				}
 			}
 		}
@@ -952,6 +955,7 @@ func (o *OpenStack) gatherServers(ctx context.Context, acc telegraf.Accumulator)
 			"vcpus":            vcpus,
 			"ram_mb":           ram,
 			"disk_gb":          disk,
+			"flavor_name":      flavor_name,
 			"fault_created":    o.convertTimeFormat(server.Fault.Created),
 			"updated":          o.convertTimeFormat(server.Updated),
 			"created":          o.convertTimeFormat(server.Created),
